@@ -1,0 +1,94 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-[#0A0A0A] text-white antialiased selection:bg-cobalt selection:text-white;
+    font-family: 'Inter', sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-black uppercase tracking-tighter;
+  }
+}
+
+@layer components {
+  /* Flat Minimal Card */
+  .card {
+    @apply bg-surface border border-white/5 rounded-sm p-8 transition-all duration-300;
+  }
+
+  /* Swiss Button (Flat, Rectangular) */
+  .btn-swiss {
+    @apply px-8 py-4 rounded-sm font-black uppercase tracking-tighter text-[11px] transition-all duration-200 flex items-center justify-center gap-2;
+  }
+
+  .btn-primary {
+    @apply btn-swiss bg-white text-black hover:bg-gray-200 active:scale-[0.97];
+  }
+
+  .btn-outline {
+    @apply btn-swiss bg-transparent border border-white/10 text-white hover:bg-white hover:text-black active:scale-[0.97];
+  }
+
+  .btn-cobalt {
+    @apply btn-swiss bg-cobalt text-white hover:brightness-110 active:scale-[0.97];
+  }
+
+  /* Table Styles */
+  .swiss-table {
+    @apply w-full text-left border-collapse;
+  }
+
+  .swiss-table th {
+    @apply py-4 px-6 text-[10px] font-black uppercase tracking-widest text-slate-500 border-b border-white/10;
+  }
+
+  .swiss-table td {
+    @apply py-5 px-6 text-sm font-normal border-b border-white/5;
+  }
+
+  /* Input Styles */
+  .input-swiss {
+    @apply w-full bg-transparent border border-white/10 rounded-sm p-4 text-sm font-normal focus:border-cobalt focus:ring-0 outline-none transition-all placeholder:text-slate-700;
+  }
+
+  .input-label-swiss {
+    @apply block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2;
+  }
+
+  .bg-noise {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    @apply opacity-[0.02] pointer-events-none fixed inset-0 z-[100];
+  }
+
+  .bg-grid {
+    background-size: 64px 64px;
+    background-image: linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                      linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    @apply fixed inset-0 pointer-events-none z-[-1];
+  }
+
+  .glass {
+    @apply bg-[#0A0A0A]/80 backdrop-blur-xl border border-white/5;
+  }
+}
+
+/* Custom Inversion for Sidebar */
+.nav-item-active {
+  @apply bg-white text-black !important;
+}
+
+/* Animations */
+.animate-reveal {
+  animation: reveal 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes reveal {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+::-webkit-scrollbar { width: 2px; }
+::-webkit-scrollbar-thumb { @apply bg-white/10; }

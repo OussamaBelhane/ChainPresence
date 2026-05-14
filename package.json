@@ -1,0 +1,22 @@
+{
+  "name": "chainpresence",
+  "version": "1.0.0",
+  "description": "Decentralized Attendance Management System",
+  "private": true,
+  "scripts": {
+    "compile": "truffle compile",
+    "migrate": "truffle migrate --reset",
+    "test": "truffle test",
+    "console": "truffle console"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^4.9.3"
+  },
+  "devDependencies": {
+    "@openzeppelin/test-helpers": "^0.5.16",
+    "@truffle/hdwallet-provider": "^2.1.15",
+    "chai": "^4.3.10",
+    "mocha": "^10.2.0",
+    "truffle": "^5.11.5"
+  }
+}

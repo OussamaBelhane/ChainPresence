@@ -133,6 +133,12 @@ export function Web3Provider({ children }) {
         toast.success('Authenticated Successfully')
       }
     } catch (err) {
+      // Silence common user rejection or authorization errors
+      if (err.code === 4001 || err.code === 4100 || err.message?.includes('user rejected')) {
+        console.log('Authentication cancelled by user.')
+        return
+      }
+      
       console.error('Login failed:', err)
       const msg = err.response?.data?.error || err.message || 'Authentication failed.'
       toast.error(msg)

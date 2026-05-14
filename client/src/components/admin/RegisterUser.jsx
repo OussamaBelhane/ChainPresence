@@ -3,6 +3,8 @@ import { ethers } from 'ethers'
 import toast from 'react-hot-toast'
 import { useAttendance } from '../../hooks/useAttendance.js'
 import LoadingSpinner from '../shared/LoadingSpinner.jsx'
+import { Shield, UserPlus, ArrowRight } from 'lucide-react'
+import { motion } from 'framer-motion'
 
 export default function RegisterUser() {
   const { registerStudent, registerProfessor, loading, txStatus } = useAttendance()
@@ -12,8 +14,8 @@ export default function RegisterUser() {
 
   const validate = () => {
     const e = {}
-    if (!ethers.isAddress(form.wallet)) e.wallet = 'Enter a valid Ethereum address (0x…)'
-    if (!form.name.trim())             e.name   = 'Full name is required'
+    if (!ethers.isAddress(form.wallet)) e.wallet = 'Enter a valid Ethereum address.'
+    if (!form.name.trim())             e.name   = 'Full name is required.'
     setErrors(e)
     return Object.keys(e).length === 0
   }
@@ -22,17 +24,18 @@ export default function RegisterUser() {
     ev.preventDefault()
     if (!validate()) return
 
+    const tid = toast.loading('Initiating Onboarding...')
     try {
       if (form.role === 'STUDENT') {
         await registerStudent(form.wallet, form.name.trim())
-        toast.success(`Student "${form.name}" registered!`)
+        toast.success(`STUDENT "${form.name}" PROVISIONED`, { id: tid })
       } else {
         await registerProfessor(form.wallet, form.name.trim())
-        toast.success(`Professor "${form.name}" registered!`)
+        toast.success(`PROFESSOR "${form.name}" PROVISIONED`, { id: tid })
       }
       setForm({ wallet: '', name: '', role: 'STUDENT' })
     } catch (err) {
-      toast.error(err.message)
+      toast.error(err.message, { id: tid })
     }
   }
 
@@ -42,82 +45,85 @@ export default function RegisterUser() {
   }
 
   const txLabel = {
-    pending:   'Waiting for MetaMask…',
-    mining:    'Transaction pending…',
-    confirmed: 'Confirmed!',
+    pending:   'WAITING FOR SIGNATURE…',
+    mining:    'COMMITTING TO LEDGER…',
+    confirmed: 'SUCCESSFUL!',
   }
 
   return (
-    <div className="px-4 sm:px-6 py-6 max-w-lg animate-fade-in">
-      <h2 className="text-2xl font-bold mb-6" style={{ fontFamily: 'Syne, sans-serif' }}>
-        Register User
-      </h2>
+    <div className="animate-reveal max-w-2xl">
+      <header className="mb-12">
+        <div className="flex items-center gap-3 mb-4">
+           <Shield className="w-5 h-5 text-white" />
+           <span className="text-[10px] font-black tracking-[0.3em] text-slate-500 uppercase">
+             MANUAL PROVISIONING
+           </span>
+        </div>
+        <h1 className="text-4xl font-black text-white uppercase tracking-tight">
+          Register User
+        </h1>
+        <p className="text-xs text-white/60 mt-3 font-normal leading-relaxed">
+          Manually authorize a cryptographic identity on the protocol without a public request.
+        </p>
+      </header>
 
-      <form onSubmit={handleSubmit} noValidate className="space-y-5">
-        <div>
-          <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>
-            Role *
-          </label>
-          <select
-            id="user-role"
-            className="select"
-            value={form.role}
-            onChange={handleChange('role')}
-          >
-            <option value="STUDENT">Student</option>
-            <option value="PROFESSOR">Professor</option>
-          </select>
+      <form onSubmit={handleSubmit} noValidate className="space-y-px bg-white/5 border border-white/5">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-px bg-white/5">
+           <div className="bg-[#0A0A0A] p-8">
+              <label className="input-label-swiss">Intended Role</label>
+              <select
+                className="bg-transparent border-none w-full p-0 text-lg font-bold text-white focus:ring-0 appearance-none cursor-pointer uppercase tracking-tight"
+                value={form.role}
+                onChange={handleChange('role')}
+              >
+                <option value="STUDENT" className="bg-[#0A0A0A]">STUDENT</option>
+                <option value="PROFESSOR" className="bg-[#0A0A0A]">PROFESSOR</option>
+              </select>
+           </div>
+           
+           <div className="bg-[#0A0A0A] p-8">
+              <label className="input-label-swiss">Identity (Full Name)</label>
+              <input
+                type="text"
+                className="bg-transparent border-none w-full p-0 text-lg font-bold text-white focus:ring-0 placeholder:text-slate-800"
+                placeholder="JEAN DUPONT"
+                value={form.name}
+                onChange={handleChange('name')}
+              />
+              {errors.name && <p className="text-[9px] font-black text-rose-500 uppercase mt-2">{errors.name}</p>}
+           </div>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>
-            Wallet Address *
-          </label>
+        <div className="bg-[#0A0A0A] p-8">
+          <label className="input-label-swiss">Cryptographic Address (Wallet)</label>
           <input
-            id="user-wallet"
-            className="input font-mono text-sm"
+            type="text"
+            className="bg-transparent border-none w-full p-0 text-lg font-mono font-bold text-white focus:ring-0 placeholder:text-slate-800"
             placeholder="0x..."
             value={form.wallet}
             onChange={handleChange('wallet')}
             spellCheck={false}
           />
-          {errors.wallet && <p className="text-xs mt-1" style={{ color: 'var(--danger)' }}>{errors.wallet}</p>}
+          {errors.wallet && <p className="text-[9px] font-black text-rose-500 uppercase mt-2">{errors.wallet}</p>}
         </div>
 
-        <div>
-          <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>
-            Full Name *
-          </label>
-          <input
-            id="user-name"
-            className="input"
-            placeholder="e.g. Alice Johnson"
-            value={form.name}
-            onChange={handleChange('name')}
-          />
-          {errors.name && <p className="text-xs mt-1" style={{ color: 'var(--danger)' }}>{errors.name}</p>}
+        <div className="bg-[#0A0A0A] p-8">
+           <button
+            type="submit"
+            className="btn-primary w-full group"
+            disabled={loading}
+           >
+            {loading ? (
+              <span className="animate-pulse">{txLabel[txStatus] || 'PROVISIONING…'}</span>
+            ) : (
+              <div className="flex items-center justify-center gap-3">
+                 <UserPlus size={18} />
+                 <span>REGISTER {form.role}</span>
+                 <ArrowRight size={16} className="group-hover:translate-x-2 transition-transform" />
+              </div>
+            )}
+           </button>
         </div>
-
-        <button
-          id="register-user-btn"
-          type="submit"
-          className="btn-primary w-full py-4"
-          disabled={loading}
-        >
-          {loading ? (
-            <LoadingSpinner inline message={txLabel[txStatus] || 'Registering…'} />
-          ) : (
-            <>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2" />
-                <circle cx="9" cy="7" r="4" />
-                <line x1="19" y1="8" x2="19" y2="14" />
-                <line x1="22" y1="11" x2="16" y2="11" />
-              </svg>
-              Register {form.role === 'STUDENT' ? 'Student' : 'Professor'}
-            </>
-          )}
-        </button>
       </form>
     </div>
   )

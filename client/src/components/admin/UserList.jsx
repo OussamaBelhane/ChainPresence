@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react'
 import { useWeb3 } from '../../context/Web3Context.jsx'
 import { useAttendance } from '../../hooks/useAttendance.js'
 import { truncateAddress } from '../../utils/formatters.js'
-import RoleBadge from '../shared/RoleBadge.jsx'
 import LoadingSpinner from '../shared/LoadingSpinner.jsx'
+import { Search, UserX, UserCheck, Filter, ArrowUpRight } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 export default function UserList() {
@@ -50,25 +50,25 @@ export default function UserList() {
   useEffect(() => { load() }, [contract])
 
   const handleRemove = async (addr, name) => {
-    if (!window.confirm(`Remove user "${name}" (${truncateAddress(addr)})?`)) return
+    const tid = toast.loading('Removing from chain...')
     try {
       await removeUser(addr)
-      toast.success(`User "${name}" removed.`)
+      toast.success(`User "${name}" removed.`, { id: tid })
       load()
     } catch (err) {
-      toast.error(err.message)
+      toast.error(err.message, { id: tid })
     }
   }
 
   const handleChangeRole = async (addr, name, currentRole, newRole) => {
     if (currentRole === newRole) return
-    if (!window.confirm(`Change role of "${name}" to ${newRole}?`)) return
+    const tid = toast.loading('Updating role...')
     try {
       await changeUserRole(addr, newRole)
-      toast.success(`Role for "${name}" updated to ${newRole}.`)
+      toast.success(`Role for "${name}" updated.`, { id: tid })
       load()
     } catch (err) {
-      toast.error(err.message)
+      toast.error(err.message, { id: tid })
     }
   }
 
@@ -82,118 +82,101 @@ export default function UserList() {
   if (loading) return <div className="flex justify-center py-16"><LoadingSpinner /></div>
 
   return (
-    <div className="px-4 sm:px-6 py-6 animate-fade-in">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-        <h2 className="text-2xl font-bold" style={{ fontFamily: 'Syne, sans-serif' }}>
-          Registered Users
-        </h2>
-        <div className="flex gap-3 flex-wrap">
-          <input
-            className="input text-sm w-48"
-            placeholder="Search name or address…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          <select
-            className="select text-sm w-36"
-            value={roleFilter}
-            onChange={(e) => setRoleFilter(e.target.value)}
-          >
-            <option value="All">All Roles</option>
-            <option value="STUDENT">Students</option>
-            <option value="PROFESSOR">Professors</option>
-          </select>
+    <div className="animate-reveal">
+      <header className="mb-12">
+        <div className="flex items-center gap-3 mb-4">
+           <Filter className="w-4 h-4 text-white" />
+           <span className="text-[10px] font-black tracking-[0.3em] text-slate-500 uppercase">
+             REGISTRY MANAGEMENT
+           </span>
         </div>
-      </div>
+        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8">
+           <div>
+              <h1 className="text-4xl font-black text-white uppercase tracking-tight">
+                Registered Users
+              </h1>
+              <p className="text-xs text-white/60 mt-3 font-normal leading-relaxed">
+                Complete directory of authorized cryptographic identities within the protocol.
+              </p>
+           </div>
+           
+           <div className="flex gap-px bg-white/5 border border-white/5">
+              <div className="bg-[#0A0A0A] p-3 flex items-center gap-4">
+                 <Search className="text-slate-600" size={16} />
+                 <input
+                  className="bg-transparent border-none text-[11px] font-bold text-white focus:ring-0 placeholder:text-slate-800 uppercase tracking-widest w-48"
+                  placeholder="SEARCH IDENTITY..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                 />
+              </div>
+              <select
+                className="bg-[#0A0A0A] border-none text-[11px] font-black text-white focus:ring-0 cursor-pointer px-6 uppercase tracking-widest"
+                value={roleFilter}
+                onChange={(e) => setRoleFilter(e.target.value)}
+              >
+                <option value="All">ALL ROLES</option>
+                <option value="STUDENT">STUDENTS</option>
+                <option value="PROFESSOR">PROFESSORS</option>
+              </select>
+           </div>
+        </div>
+      </header>
 
       {filtered.length === 0 ? (
-        <div className="card text-center py-12">
-          <p style={{ color: 'var(--text-secondary)' }}>No users found.</p>
+        <div className="border border-white/5 bg-white/[0.01] p-16 flex flex-col items-center text-center">
+           <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em]">No identities matched your criteria.</p>
         </div>
       ) : (
-        <>
-          {/* Desktop table */}
-          <div className="card hidden sm:block overflow-hidden p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr style={{ borderBottom: '1px solid var(--border)', background: 'var(--bg-elevated)' }}>
-                    {['Name', 'Wallet', 'Role', 'Actions'].map((h) => (
-                      <th key={h} className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider"
-                        style={{ color: 'var(--text-secondary)' }}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtered.map((u) => (
-                    <tr key={u.address} style={{ borderBottom: '1px solid var(--border)' }}>
-                      <td className="px-4 py-3 font-medium">{u.name || '—'}</td>
-                      <td className="px-4 py-3 font-mono text-xs" style={{ color: 'var(--text-secondary)' }}>
-                        {u.address}
-                      </td>
-                      <td className="px-4 py-3"><RoleBadge role={u.role} /></td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <select
-                            className="select text-xs py-1 px-2 w-28"
-                            value={u.role}
-                            disabled={txLoading}
-                            onChange={(e) => handleChangeRole(u.address, u.name, u.role, e.target.value)}
-                          >
-                            <option value="STUDENT">Student</option>
-                            <option value="PROFESSOR">Professor</option>
-                          </select>
-                          <button
-                            className="btn-danger text-xs px-3 py-1.5"
-                            disabled={txLoading}
-                            onClick={() => handleRemove(u.address, u.name)}
-                          >
-                            Remove
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+        <div className="space-y-px bg-white/5 border border-white/5">
+           {/* Desktop Header */}
+           <div className="hidden lg:grid grid-cols-12 gap-6 p-6 bg-white/[0.02] border-b border-white/5">
+              <div className="col-span-3 text-[10px] font-black text-slate-500 uppercase tracking-[0.3em]">NAME</div>
+              <div className="col-span-4 text-[10px] font-black text-slate-500 uppercase tracking-[0.3em]">WALLET</div>
+              <div className="col-span-2 text-[10px] font-black text-slate-500 uppercase tracking-[0.3em]">ROLE</div>
+              <div className="col-span-3 text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] text-right">ACTIONS</div>
+           </div>
 
-          {/* Mobile cards */}
-          <div className="sm:hidden space-y-3">
-            {filtered.map((u) => (
-              <div key={u.address} className="card">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <p className="font-semibold">{u.name || '—'}</p>
-                    <p className="text-xs font-mono mt-0.5" style={{ color: 'var(--text-muted)' }}>
-                      {truncateAddress(u.address)}
-                    </p>
-                  </div>
-                  <RoleBadge role={u.role} />
+           {filtered.map((u) => (
+             <div key={u.address} className="lg:grid lg:grid-cols-12 gap-6 p-6 bg-[#0A0A0A] hover:bg-white/[0.01] transition-all border-b border-white/5 last:border-0 items-center">
+                <div className="col-span-3 font-black text-white uppercase tracking-tight truncate">
+                   {u.name || 'ANONYMOUS'}
                 </div>
-                <div className="flex gap-2 mt-3">
-                  <select
-                    className="select text-xs flex-1 py-1.5"
+                
+                <div className="col-span-4 font-mono text-[11px] text-slate-500 flex items-center gap-2">
+                   <div className="w-1.5 h-1.5 rounded-full bg-slate-800" />
+                   {u.address}
+                </div>
+
+                <div className="col-span-2">
+                   <span className="text-[8px] font-black px-2 py-0.5 border border-white/10 text-slate-400 uppercase tracking-widest inline-block">
+                      {u.role}
+                   </span>
+                </div>
+
+                <div className="col-span-3 flex justify-end items-center gap-4">
+                   <select
+                    className="bg-transparent border-none text-[9px] font-black text-slate-500 hover:text-white focus:ring-0 cursor-pointer uppercase tracking-widest transition-colors"
                     value={u.role}
                     disabled={txLoading}
                     onChange={(e) => handleChangeRole(u.address, u.name, u.role, e.target.value)}
-                  >
-                    <option value="STUDENT">Student</option>
-                    <option value="PROFESSOR">Professor</option>
-                  </select>
-                  <button
-                    className="btn-danger text-xs flex-1 py-1.5"
+                   >
+                     <option value="STUDENT" className="bg-[#0A0A0A]">CHANGE TO STUDENT</option>
+                     <option value="PROFESSOR" className="bg-[#0A0A0A]">CHANGE TO PROFESSOR</option>
+                   </select>
+
+                   <button
                     onClick={() => handleRemove(u.address, u.name)}
                     disabled={txLoading}
-                  >
-                    Remove
-                  </button>
+                    className="text-[9px] font-black text-rose-500/50 hover:text-rose-500 uppercase tracking-widest transition-colors flex items-center gap-2 px-3 py-2 border border-white/5 hover:border-rose-500/20"
+                   >
+                      <UserX size={12} />
+                      REMOVE
+                   </button>
                 </div>
-              </div>
-            ))}
-          </div>
-        </>
+             </div>
+           ))}
+        </div>
       )}
     </div>
   )

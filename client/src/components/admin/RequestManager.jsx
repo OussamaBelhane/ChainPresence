@@ -28,10 +28,10 @@ export default function RequestManager() {
 
   const handleApprove = async (address) => {
     try {
-      toast.loading('Committing to chain...', { id: 'approve' })
+      const tid = toast.loading('Committing to ledger...')
       const { data } = await axios.post(`${API_URL}/api/auth/requests/${address}/approve`)
       if (data.success) {
-        toast.success('User Provisioned on-chain!', { id: 'approve' })
+        toast.success('Identity Provisioned!', { id: tid })
         loadRequests()
       }
     } catch (err) {
@@ -43,67 +43,59 @@ export default function RequestManager() {
 
   if (loading) return <div className="flex justify-center py-12"><LoadingSpinner /></div>
 
+  if (pending.length === 0) return (
+    <div className="border border-white/5 bg-white/[0.01] p-16 flex flex-col items-center text-center">
+       <div className="w-16 h-16 rounded-full border border-white/5 flex items-center justify-center text-slate-700 mb-6">
+          <Inbox size={32} strokeWidth={1} />
+       </div>
+       <h3 className="text-sm font-black text-white uppercase tracking-widest">Registry Empty</h3>
+       <p className="text-[10px] text-slate-500 uppercase tracking-tight mt-2">All identity requests have been processed.</p>
+    </div>
+  )
+
   return (
-    <div className="space-y-8 animate-reveal">
-      <header>
-         <h2 className="text-[20px] font-[var(--font-display)] font-[800] tracking-tight">Access Requests</h2>
-         <p className="text-[13px] text-[var(--text-muted)] mt-1">Pending cryptographic onboarding requests ({pending.length})</p>
-      </header>
+    <div className="space-y-px bg-white/5 border border-white/5">
+       <AnimatePresence>
+         {pending.map((req) => (
+            <motion.div 
+              key={req.address}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="bg-[#0A0A0A] p-6 hover:bg-white/[0.02] transition-all flex flex-col md:flex-row md:items-center justify-between gap-6"
+            >
+               <div className="flex items-center gap-6">
+                  <div className={`w-12 h-12 flex items-center justify-center border ${req.role === 'PROFESSOR' ? 'border-white text-white' : 'border-white/10 text-slate-500'}`}>
+                     <UserCheck size={24} strokeWidth={1.5} />
+                  </div>
+                  <div>
+                     <div className="flex items-center gap-3">
+                        <h4 className="text-base font-black text-white uppercase tracking-tight">{req.name}</h4>
+                        <span className="text-[8px] font-black px-2 py-0.5 border border-white/10 text-slate-500 uppercase tracking-widest">
+                           {req.role}
+                        </span>
+                     </div>
+                     <div className="mt-2 flex items-center gap-6">
+                        <WalletChip address={req.address} />
+                        <span className="text-[10px] font-mono text-slate-600 uppercase">{req.studentId || 'NO STAFF ID'}</span>
+                     </div>
+                  </div>
+               </div>
 
-      {pending.length === 0 ? (
-        <div className="card-accent bg-[var(--bg-elevated)] p-12 flex flex-col items-center text-center">
-           <div className="w-16 h-16 rounded-full bg-[var(--bg-app)] flex items-center justify-center text-[var(--text-muted)] mb-4">
-              <Inbox size={32} />
-           </div>
-           <h3 className="text-[16px] font-bold">Queue Empty</h3>
-           <p className="text-[13px] text-[var(--text-muted)] max-w-[240px] mt-2">All registration requests have been processed.</p>
-        </div>
-      ) : (
-        <div className="space-y-4">
-           <AnimatePresence>
-             {pending.map((req) => (
-                <motion.div 
-                  key={req.address}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 10 }}
-                  className="card bg-[var(--bg-elevated)] p-6 hover:border-[var(--border-strong)] transition-all flex flex-col md:flex-row md:items-center justify-between gap-6"
-                >
-                   <div className="flex items-center gap-4">
-                      <div className={`w-12 h-12 rounded-full flex items-center justify-center ${req.role === 'PROFESSOR' ? 'bg-[var(--violet-dim)] text-[var(--violet)]' : 'bg-[var(--accent-dim)] text-[var(--accent)]'}`}>
-                         <UserCheck size={24} />
-                      </div>
-                      <div>
-                         <div className="flex items-center gap-3">
-                            <h4 className="text-[16px] font-bold">{req.name}</h4>
-                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-tighter ${req.role === 'PROFESSOR' ? 'bg-[var(--violet-dim)] text-[var(--violet)]' : 'bg-[var(--accent-dim)] text-[var(--accent)]'}`}>
-                               {req.role}
-                            </span>
-                         </div>
-                         <div className="mt-1 flex items-center gap-4">
-                            <WalletChip address={req.address} />
-                            <span className="text-[11px] text-[var(--text-muted)]">{req.studentId || 'No Staff ID'}</span>
-                         </div>
-                      </div>
-                   </div>
-
-                   <div className="flex gap-3">
-                      <button 
-                        onClick={() => handleApprove(req.address)}
-                        className="btn-primary py-2 px-6"
-                      >
-                         <Check size={16} className="mr-2" />
-                         Approve
-                      </button>
-                      <button className="btn-ghost py-2 px-3">
-                         <X size={16} />
-                      </button>
-                   </div>
-                </motion.div>
-             ))}
-           </AnimatePresence>
-        </div>
-      )}
+               <div className="flex gap-px bg-white/10">
+                  <button 
+                    onClick={() => handleApprove(req.address)}
+                    className="bg-white text-black text-[10px] font-black px-6 py-3 uppercase tracking-widest hover:bg-slate-200 transition-colors"
+                  >
+                     APPROVE
+                  </button>
+                  <button className="bg-[#0A0A0A] text-slate-600 px-4 py-3 hover:text-white transition-colors">
+                     <X size={16} />
+                  </button>
+               </div>
+            </motion.div>
+         ))}
+       </AnimatePresence>
     </div>
   )
 }

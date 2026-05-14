@@ -106,6 +106,39 @@ contract AttendanceManager is AccessControl {
         userNames[user] = name;
     }
 
+    function removeUser(address user) external onlyRole(ADMIN_ROLE) {
+        // Revoke all possible roles
+        _revokeRole(STUDENT_ROLE, user);
+        _revokeRole(PROFESSOR_ROLE, user);
+        _revokeRole(ADMIN_ROLE, user);
+        _revokeRole(DEFAULT_ADMIN_ROLE, user);
+
+        // Clear user metadata to allow re-registration
+        delete userRole[user];
+        delete userNames[user];
+        blockedUsers[user] = false;
+
+        // Note: We don't strictly need to remove from _allStudents array 
+        // as the frontend deduplicates and checks userRole now.
+    }
+
+    function changeUserRole(address user, string calldata newRole) external onlyRole(ADMIN_ROLE) {
+        bytes32 newRoleHash = keccak256(bytes(newRole));
+        
+        // Revoke old roles
+        _revokeRole(STUDENT_ROLE, user);
+        _revokeRole(PROFESSOR_ROLE, user);
+        
+        // Grant new role
+        if (newRoleHash == STUDENT_ROLE) {
+            _grantRole(STUDENT_ROLE, user);
+            userRole[user] = "STUDENT";
+        } else if (newRoleHash == PROFESSOR_ROLE) {
+            _grantRole(PROFESSOR_ROLE, user);
+            userRole[user] = "PROFESSOR";
+        }
+    }
+
     // --- Professor Logic ---
 
     function openSession(

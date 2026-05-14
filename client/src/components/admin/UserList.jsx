@@ -39,7 +39,9 @@ export default function UserList() {
         }))
       )
 
-      setUsers([...professorData, ...studentData])
+      const combined = [...professorData, ...studentData]
+      const uniqueUsers = Array.from(new Map(combined.map(u => [u.address.toLowerCase(), u])).values())
+      setUsers(uniqueUsers)
     } catch (err) {
       console.error('UserList load error:', err)
     } finally {

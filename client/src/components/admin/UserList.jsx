@@ -54,11 +54,18 @@ export default function UserList() {
   const handleRemove = async (addr, name) => {
     const tid = toast.loading('Removing from chain...')
     try {
+      // 1. On-chain removal
       await removeUser(addr)
-      toast.success(`User "${name}" removed.`, { id: tid })
+      
+      // 2. Server-side cleanup
+      toast.loading('Purging server records...', { id: tid })
+      const API_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:5000'
+      await axios.delete(`${API_URL}/api/auth/users/${addr}`, { withCredentials: true })
+
+      toast.success(`User "${name}" removed and data purged.`, { id: tid })
       load()
     } catch (err) {
-      toast.error(err.message, { id: tid })
+      toast.error(err.message || 'Cleanup failed', { id: tid })
     }
   }
 

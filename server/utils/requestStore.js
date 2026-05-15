@@ -59,4 +59,14 @@ const updateRequestStatus = (address, status) => {
   return false;
 };
 
-module.exports = { getRequests, addRequest, updateRequestStatus };
+const deleteRequest = (address) => {
+  const requests = getRequests();
+  const filtered = requests.filter(r => r.address.toLowerCase() !== address.toLowerCase());
+  if (requests.length !== filtered.length) {
+    saveRequests(filtered);
+    return true;
+  }
+  return false;
+};
+
+module.exports = { getRequests, addRequest, updateRequestStatus, deleteRequest };

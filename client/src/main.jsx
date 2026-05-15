@@ -13,7 +13,11 @@ import { WagmiProvider } from 'wagmi'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { localhost } from 'wagmi/chains'
 
-const projectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID
+const projectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID || 'placeholder_id_for_local_dev'
+
+if (!import.meta.env.VITE_WALLETCONNECT_PROJECT_ID) {
+  console.warn('VITE_WALLETCONNECT_PROJECT_ID is missing in .env. Some wallet features may be limited.')
+}
 
 // 1. Create Restricted wagmiConfig
 const metadata = {
@@ -55,10 +59,9 @@ createWeb3Modal({
   enableOnramp: false,
   enableEmail: false,
   enableSocials: false,
-  includeWalletIds: [
+  featuredWalletIds: [
     'c5744173831395483584775d8a3a8383', // MetaMask
   ],
-  allWallets: 'HIDE',
   themeMode: 'dark',
   themeVariables: {
     '--w3m-accent': '#6366F1',

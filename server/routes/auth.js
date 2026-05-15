@@ -3,7 +3,7 @@ const { SiweMessage, generateNonce } = require("siwe");
 const jwt = require("jsonwebtoken");
 const { ethers } = require("ethers");
 const rateLimit = require("express-rate-limit");
-const { addRequest, getRequests, updateRequestStatus } = require("../utils/requestStore");
+const { addRequest, getRequests, updateRequestStatus, deleteRequest } = require("../utils/requestStore");
 const { onboardWallet } = require("../utils/syncRoles");
 const { authenticateToken, authorizeRoles } = require("../middleware/auth");
 
@@ -151,6 +151,34 @@ router.post("/requests/:address/approve", authenticateToken, authorizeRoles("ADM
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * DELETE /api/auth/users/:address
+ * Purges all local data for a user (requests, enrollments).
+ */
+router.delete("/users/:address", authenticateToken, authorizeRoles("ADMIN"), async (req, res) => {
+  try {
+    const { address } = req.params;
+    const addr = address.toLowerCase();
+
+    // 1. Remove from requests.json
+    deleteRequest(addr);
+
+    // 2. Remove from enrollments.json
+    const ENROLLMENTS_FILE = path.join(__dirname, "../data/enrollments.json");
+    if (fs.existsSync(ENROLLMENTS_FILE)) {
+      const enrollments = JSON.parse(fs.readFileSync(ENROLLMENTS_FILE, "utf-8"));
+      const filtered = enrollments.filter(e => e.studentAddress.toLowerCase() !== addr);
+      fs.writeFileSync(ENROLLMENTS_FILE, JSON.stringify(filtered, null, 2));
+    }
+
+    console.log(`🧹 Purged local data for ${addr}`);
+    res.json({ success: true, message: "User data purged from server." });
+  } catch (err) {
+    console.error("Purge Error:", err);
+    res.status(500).json({ error: "Failed to purge user data." });
   }
 });
 

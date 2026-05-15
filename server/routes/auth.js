@@ -1,4 +1,6 @@
 const { Router } = require("express");
+const fs = require("fs");
+const path = require("path");
 const { SiweMessage, generateNonce } = require("siwe");
 const jwt = require("jsonwebtoken");
 const { ethers } = require("ethers");
